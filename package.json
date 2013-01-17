@@ -1,0 +1,18 @@
+{
+  "name": "movie-cabinet",
+  "version": "0.0.0",
+  "description": "Example of Ember application with a little more complexity than other examples out there. Part of my 'Ember.js: Breaking the CRUD' series.",
+  "repository": "git://github.com/joefiorini/movie-cabinet.git",
+  "author": "Joe Fiorini",
+  "license": "BSD",
+  "devDependencies": {
+    "grunt": "git://github.com/gruntjs/grunt.git",
+    "grunt-neuter": "~0.3.0",
+    "grunt-contrib-uglify": "~0.1.0",
+    "grunt-contrib-jshint": "~0.1.0",
+    "grunt-ember-templates": "~0.4.1",
+    "grunt-contrib-watch": "~0.1.4",
+    "grunt-contrib-sass": "git://github.com/gruntjs/grunt-contrib-sass",
+    "grunt-contrib-connect": "git://github.com/gruntjs/grunt-contrib-connect"
+  }
+}
