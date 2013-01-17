@@ -20,6 +20,6 @@
     "sinon": true,
     "require": true,
     "Ember": true,
-    "Todos": true
+    "Movies": true
   }
 }

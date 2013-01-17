@@ -71,9 +71,7 @@ module.exports = function(grunt) {
         require: ["compass", "zurb-foundation"],
         trace: true
       },
-      files: {
-        'build/main.css': 'scss/main.scss'
-      }
+      'build/css/main.css': 'scss/main.scss'
     },
 
     /*

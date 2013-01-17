@@ -1,7 +1,11 @@
 require('vendor/jquery');
-
 require('vendor/handlebars');
-
 require('vendor/ember');
 
-window.App = Ember.Application.create();
+window.Movies = Ember.Application.create();
+
+Ember.Router.reopen({
+  location: "history"
+});
+
+require('app/routes');

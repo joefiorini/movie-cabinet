@@ -2,3 +2,4 @@ node_modules
 .sass-cache
 build/application.js
 build/templates.js
+build/css
