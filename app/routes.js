@@ -1,3 +1,5 @@
 Movies.Router.map(function(){
-  this.route("home", { path: "/" });
+  this.resource("search", function(){
+    this.route("results", { path: "/:keyword" });
+  });
 });

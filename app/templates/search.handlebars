@@ -1,0 +1,25 @@
+<div class="row">
+  <div class="eight columns">
+    <div class="panel">
+      <h2>Search for a movie</h2>
+      <form>
+        <div class="row">
+          <div class="twelve columns">
+            {{view Ember.TextField valueBinding="searcher.keyword"}}
+          </div>
+        </div>
+        <div class="row">
+          <div class="two mobile-one columns">
+            <button class="large radius button" {{action search}}>Search</button>
+          </div>
+        </div>
+      </form>
+    </div>
+    <hr />
+  </div>
+</div>
+
+<div class="row">
+  {{outlet results}}
+</div>
+

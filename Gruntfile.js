@@ -92,10 +92,16 @@ module.exports = function(grunt) {
     ember_templates: {
       options: {
         templateName: function(sourceFile) {
-          return sourceFile.replace(/app\/templates\//, '');
+          return sourceFile.replace(/app(?:\/([^\/]*))?\/templates\//, function(_,name){
+            if(name){
+              return name + "/";
+            } else {
+              return "";
+            }
+          });
         }
       },
-      'build/templates.js': ["app/templates/*.handlebars"]
+      'build/templates.js': ["app/**/*.handlebars"]
     },
 
     connect: {

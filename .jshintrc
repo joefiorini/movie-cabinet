@@ -20,6 +20,8 @@
     "sinon": true,
     "require": true,
     "Ember": true,
-    "Movies": true
+    "Movies": true,
+    "Rotten": true,
+    "console": true
   }
 }
