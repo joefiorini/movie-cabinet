@@ -1,6 +1,9 @@
 require('vendor/jquery');
 require('vendor/handlebars');
 require('vendor/ember');
+require('vendor/foundation/jquery.foundation.tooltips');
+require('vendor/foundation/modernizr.foundation');
+require('vendor/foundation/app');
 
 require('lib/ember-export');
 

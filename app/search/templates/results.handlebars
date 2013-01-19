@@ -1,13 +1,19 @@
 <ul class="block-grid two-up">
 {{#each movie in content}}
   <li>
-    <div class="two columns">
+    <div class="four columns">
       <img {{bindAttr src="movie.posters.profile"}}>
+      <p>
+        <a class="th has-tip tip-top" {{bindAttr href="movie.imdbUrl" title="movie.imdbCaption"}}>
+          <img src="/images/imdb.png" width="80">
+        </a>
+      </p>
     </div>
-    <div class="ten columns">
+    <div class="eight columns">
       <h5>{{movie.title}}</h5>
       <p>Released: {{movie.year}}</p>
-      <p><a {{bindAttr href="movie.imdbUrl" title="movie.imdbCaption"}}><img src="/images/imdb.png" width="80"></a></p>
+      <p><button class="secondary button radius small">Add to Library</button><p>
+      <p><button class="secondary button radius small">Add to Watch List</button></p>
     </div>
   </li>
 {{/each}}
