@@ -30,7 +30,7 @@
     },
     events: {
       search: function(){
-        var controller = this.controllerFor("search.index"),
+        var controller = this.controllerFor("search"),
             searcher = controller.get("searcher");
         this.transitionTo("search.results", searcher);
       }

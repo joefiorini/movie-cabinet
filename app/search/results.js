@@ -8,11 +8,11 @@
       return model.search();
     },
     serialize: function(model, params){
-      return model.get("keyword");
+      return { keyword: model.get("keyword") };
     },
     setupController: function(controller, model){
-      if(model === undefined){
-        model = this.model();
+      if(typeof model["search"] === "function"){
+        model = model.search();
       }
       controller.set("content", model);
     },
