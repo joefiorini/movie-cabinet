@@ -20,11 +20,17 @@
 
   var Searcher = Ember.Object.extend({
     keyword: null,
+    totalPages: null,
     search: function(page){
-      var response = Rotten.search(this.keyword, page || currentPage),
-          movies = parseArray(response.movies);
-      this.totalPages = Math.ceil(response.total/perPage);
-      return concatPage(movies);
+      var searching = Rotten.search(this.keyword, page || currentPage),
+          self = this,
+          deferred = $.Deferred();
+      searching.then(function(response){
+        var movies = parseArray(response.movies);
+        self.set("totalPages", Math.ceil(response.total/perPage));
+        deferred.resolve(concatPage(movies));
+      });
+      return deferred.promise();
     },
     nextPage: function(){
       this.incrementProperty("currentPage");

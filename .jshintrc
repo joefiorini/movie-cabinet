@@ -22,6 +22,8 @@
     "Ember": true,
     "Movies": true,
     "Rotten": true,
-    "console": true
+    "console": true,
+    "$": true,
+    "jQuery": true
   }
 }

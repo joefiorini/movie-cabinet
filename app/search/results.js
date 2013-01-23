@@ -43,8 +43,11 @@
       var searcher = this.get("searcher");
       if(this.get("canLoadMore")){
         this.set("isLoading", true);
-        var page = searcher.nextPage();
-        this.set("content", page);
+        var searching = searcher.nextPage(),
+            self = this;
+        searching.done(function(page){
+          self.set("content", page);
+        });
       } else {
         this.set("isLoading", false);
       }
