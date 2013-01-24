@@ -8,13 +8,18 @@
       return model.search();
     },
     serialize: function(model, params){
-      return { keyword: model.get("keyword") };
+      var searcher = this.controllerFor("search").get("searcher");
+      return { keyword: searcher.get("keyword") };
     },
     setupController: function(controller, model){
-      if(typeof model["search"] === "function"){
-        model = model.search();
+      // TODO: How do I clean this up?
+      if(typeof model["done"] === "function"){
+        model.done(function(data){
+          controller.set("content", data);
+        });
+      } else {
+        controller.set("content", model);
       }
-      controller.set("content", model);
     },
     renderTemplate: function(){
       this.render({outlet: "results"});
@@ -51,7 +56,10 @@
       } else {
         this.set("isLoading", false);
       }
-    }
+    },
+    keyword: function(){
+      return this.get("searcher").get("keyword");
+    }.property("searcher")
   });
 
   var loadMoreView = Ember.View.extend({
@@ -67,4 +75,4 @@
   });
 
   Ember._.exports("Search", "Results", { route: route, controller: controller, moreView: loadMoreView });
-}).call(Movies);
+}).call(this, Movies);

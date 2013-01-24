@@ -21,6 +21,10 @@
   var Searcher = Ember.Object.extend({
     keyword: null,
     totalPages: null,
+    reset: function(){
+      fetched = [];
+      this.set("currentPage", 1);
+    },
     search: function(page){
       var searching = Rotten.search(this.keyword, page || currentPage),
           self = this,
@@ -66,11 +70,19 @@
       search: function(){
         var controller = this.controllerFor("search"),
             searcher = controller.get("searcher");
-        this.transitionTo("search.results", searcher);
+
+        searcher.reset();
+
+        var searching = searcher.search();
+        var self = this;
+        searching.done(function(results){
+          self.transitionTo("search.results", results);
+        });
       }
     }
   });
 
+  var controller = Ember.ObjectController.extend();
 
-  Ember._.exports("Search", { route: route });
+  Ember._.exports("Search", { route: route, controller: controller });
 }).call(Movies);
