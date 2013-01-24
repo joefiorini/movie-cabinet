@@ -1,5 +1,5 @@
-// Version: v1.0.0-pre.2-405-g8fd800f
-// Last commit: 8fd800f (2013-01-15 15:33:00 -0800)
+// Version: v1.0.0-pre.4
+// Last commit: 855db1a (2013-01-17 23:06:53 -0800)
 
 
 (function() {
@@ -142,8 +142,8 @@ if ('undefined' !== typeof window) {
 
 })();
 
-// Version: v1.0.0-pre.2-405-g8fd800f
-// Last commit: 8fd800f (2013-01-15 15:33:00 -0800)
+// Version: v1.0.0-pre.4
+// Last commit: 855db1a (2013-01-17 23:06:53 -0800)
 
 
 (function() {
@@ -203,7 +203,7 @@ var define, requireModule;
 
   @class Ember
   @static
-  @version 1.0.0-pre.2
+  @version 1.0.0-pre.4
 */
 
 if ('undefined' === typeof Ember) {
@@ -230,10 +230,10 @@ Ember.toString = function() { return "Ember"; };
 /**
   @property VERSION
   @type String
-  @default '1.0.0-pre.2'
+  @default '1.0.0-pre.4'
   @final
 */
-Ember.VERSION = '1.0.0-pre.2';
+Ember.VERSION = '1.0.0-pre.4';
 
 /**
   Standard environmental variables. You can define these in a global `ENV`
@@ -6125,6 +6125,13 @@ define("container",
 
         delete this.parent;
         this.isDestroyed = true;
+      },
+
+      reset: function() {
+        for (var i=0, l=this.children.length; i<l; i++) {
+          resetCache(this.children[i]);
+        }
+        resetCache(this);
       }
     };
 
@@ -6203,6 +6210,14 @@ define("container",
         if (option(container, key, 'instantiate') === false) { return; }
         callback(value);
       });
+    }
+
+    function resetCache(container) {
+      container.cache.eachLocal(function(key, value) {
+        if (option(container, key, 'instantiate') === false) { return; }
+        value.destroy();
+      });
+      container.cache.dict = {};
     }
 
     return Container;
@@ -12422,7 +12437,7 @@ Ember Runtime
 */
 
 var jQuery = Ember.imports.jQuery;
-Ember.assert("Ember Views require jQuery 1.7 (>= 1.7.2) or 1.8", jQuery && (jQuery().jquery.match(/^1\.(7(?!$)(?!\.[01])|8)(\.\d+)?(pre|rc\d?)?/) || Ember.ENV.FORCE_JQUERY));
+Ember.assert("Ember Views require jQuery 1.7 (>= 1.7.2), 1.8 or 1.9", jQuery && (jQuery().jquery.match(/^1\.(7(?!$)(?!\.[01])|8|9)(\.\d+)?(pre|rc\d?)?/) || Ember.ENV.FORCE_JQUERY));
 
 /**
   Alias for jQuery
@@ -19710,6 +19725,25 @@ Ember.Handlebars.registerHelper('template', function(name, options) {
   Ember.TEMPLATES[name](this, { data: options.data });
 });
 
+Ember.Handlebars.registerHelper('partial', function(name, options) {
+  var nameParts = name.split("/"),
+      lastPart = nameParts[nameParts.length - 1];
+
+  nameParts[nameParts.length - 1] = "_" + lastPart;
+
+  var underscoredName = nameParts.join("/");
+
+  var template = Ember.TEMPLATES[underscoredName],
+      deprecatedTemplate = Ember.TEMPLATES[name];
+
+  Ember.deprecate("You tried to render the partial " + name + ", which should be at '" + underscoredName + "', but Ember found '" + name + "'. Please use a leading underscore in your partials", template);
+  Ember.assert("Unable to find partial with name '"+name+"'.", template || deprecatedTemplate);
+
+  template = template || deprecatedTemplate;
+
+  template(this, { data: options.data });
+});
+
 })();
 
 
@@ -20255,7 +20289,8 @@ var set = Ember.set,
     indexOf = Ember.EnumerableUtils.indexOf,
     indexesOf = Ember.EnumerableUtils.indexesOf,
     replace = Ember.EnumerableUtils.replace,
-    isArray = Ember.isArray;
+    isArray = Ember.isArray,
+    precompileTemplate = Ember.Handlebars.compile;
 
 /**
   The `Ember.Select` view class renders a
@@ -20509,7 +20544,32 @@ Ember.Select = Ember.View.extend(
 
   tagName: 'select',
   classNames: ['ember-select'],
-  defaultTemplate: Ember.Handlebars.compile('{{#if view.prompt}}<option value="">{{view.prompt}}</option>{{/if}}{{#each view.content}}{{view Ember.SelectOption contentBinding="this"}}{{/each}}'),
+  defaultTemplate: Ember.Handlebars.template(function anonymous(Handlebars,depth0,helpers,partials,data) {
+helpers = helpers || Ember.Handlebars.helpers; data = data || {};
+  var buffer = '', stack1, escapeExpression=this.escapeExpression, self=this;
+
+function program1(depth0,data) {
+  
+  var buffer = '', stack1;
+  data.buffer.push("<option value=\"\">");
+  stack1 = helpers._triageMustache.call(depth0, "view.prompt", {hash:{},contexts:[depth0],data:data});
+  data.buffer.push(escapeExpression(stack1) + "</option>");
+  return buffer;}
+
+function program3(depth0,data) {
+  
+  var stack1;
+  stack1 = {};
+  stack1['contentBinding'] = "this";
+  stack1 = helpers.view.call(depth0, "Ember.SelectOption", {hash:stack1,contexts:[depth0],data:data});
+  data.buffer.push(escapeExpression(stack1));}
+
+  stack1 = helpers['if'].call(depth0, "view.prompt", {hash:{},inverse:self.noop,fn:self.program(1, program1, data),contexts:[depth0],data:data});
+  if(stack1 || stack1 === 0) { data.buffer.push(stack1); }
+  stack1 = helpers.each.call(depth0, "view.content", {hash:{},inverse:self.noop,fn:self.program(3, program3, data),contexts:[depth0],data:data});
+  if(stack1 || stack1 === 0) { data.buffer.push(stack1); }
+  return buffer;
+}),
   attributeBindings: ['multiple', 'disabled', 'tabindex'],
 
   /**
@@ -21544,29 +21604,71 @@ define("router",
 
         Used internally by `generate` and `transitionTo`.
       */
-      _paramsForHandler: function(handlerName, objects, callback) {
+      _paramsForHandler: function(handlerName, objects, doUpdate) {
         var handlers = this.recognizer.handlersFor(handlerName),
             params = {},
             toSetup = [],
-            object, handlerObj, handler, names;
+            startIdx = handlers.length,
+            objectsToMatch = objects.length,
+            object, objectChanged, handlerObj, handler, names, i, len;
 
-        for (var i=handlers.length-1; i>=0; i--) {
+        // Find out which handler to start matching at
+        for (i=handlers.length-1; i>=0 && objectsToMatch>0; i--) {
+          if (handlers[i].names.length) {
+            objectsToMatch--;
+            startIdx = i;
+          }
+        }
+
+        if (objectsToMatch > 0) {
+          throw "More objects were passed than dynamic segments";
+        }
+
+        // Connect the objects to the routes
+        for (i=0, len=handlers.length; i<len; i++) {
           handlerObj = handlers[i];
           handler = this.getHandler(handlerObj.handler);
           names = handlerObj.names;
+          objectChanged = false;
 
+          // If it's a dynamic segment
           if (names.length) {
-            if (objects.length) { object = objects.pop(); }
-            else { object = handler.context; }
+            // If we have objects, use them
+            if (i >= startIdx) {
+              object = objects.shift();
+              objectChanged = true;
+            // Otherwise use existing context
+            } else {
+              object = handler.context;
+            }
 
+            // Serialize to generate params
             if (handler.serialize) {
               merge(params, handler.serialize(object, names));
             }
-          } else if (callback) {
-            object = callback(handler);
+          // If it's not a dynamic segment and we're updating
+          } else if (doUpdate) {
+            // If we've passed the match point we need to deserialize again
+            // or if we never had a context
+            if (i > startIdx || !handler.hasOwnProperty('context')) {
+              if (handler.deserialize) {
+                object = handler.deserialize({});
+                objectChanged = true;
+              }
+            // Otherwise use existing context
+            } else {
+              object = handler.context;
+            }
           }
 
-          toSetup.unshift({
+          // Make sure that we update the context here so it's available to
+          // subsequent deserialize calls
+          if (doUpdate && objectChanged) {
+            // TODO: It's a bit awkward to set the context twice, see if we can DRY things up
+            setContext(handler, object);
+          }
+
+          toSetup.push({
             isDynamic: !!handlerObj.names.length,
             handler: handlerObj.handler,
             name: handlerObj.name,
@@ -21682,12 +21784,7 @@ define("router",
       @private
     */
     function doTransition(router, name, method, args) {
-      var output = router._paramsForHandler(name, args, function(handler) {
-        if (handler.hasOwnProperty('context')) { return handler.context; }
-        if (handler.deserialize) { return handler.deserialize({}); }
-        return null;
-      });
-
+      var output = router._paramsForHandler(name, args, true);
       var params = output.params, toSetup = output.toSetup;
 
       var url = router.recognizer.generate(name, params);
@@ -21736,6 +21833,10 @@ define("router",
       }
 
       function proceed(value) {
+        if (handler.context !== object) {
+          setContext(handler, object);
+        }
+
         var updatedObjects = objects.concat([{
           context: value,
           handler: result.handler,
@@ -21799,13 +21900,13 @@ define("router",
       });
 
       eachHandler(partition.updatedContext, function(handler, context) {
-        handler.context = context;
+        setContext(handler, context);
         if (handler.setup) { handler.setup(context); }
       });
 
       eachHandler(partition.entered, function(handler, context) {
         if (handler.enter) { handler.enter(); }
-        handler.context = context;
+        setContext(handler, context);
         if (handler.setup) { handler.setup(context); }
       });
 
@@ -21946,6 +22047,11 @@ define("router",
         }
       }
     }
+
+    function setContext(handler, context) {
+      handler.context = context;
+      if (handler.contextDidChange) { handler.contextDidChange(); }
+    }
     return Router;
   });
 
@@ -21954,6 +22060,11 @@ define("router",
 
 
 (function() {
+/**
+@module ember
+@submodule ember-routing
+*/
+
 function DSL(name) {
   this.parent = name;
   this.matches = [];
@@ -22034,6 +22145,11 @@ Ember.RouterDSL = DSL;
 
 
 (function() {
+/**
+@module ember
+@submodule ember-routing
+*/
+
 Ember.controllerFor = function(container, controllerName, context) {
   return container.lookup('controller:' + controllerName) ||
          Ember.generateController(container, controllerName, context);
@@ -22043,9 +22159,13 @@ Ember.generateController = function(container, controllerName, context) {
   var controller;
 
   if (context && Ember.isArray(context)) {
-    controller = Ember.ArrayController.extend({content: context});
+    controller = Ember.ArrayController.extend({
+      content: context
+    });
   } else if (context) {
-    controller = Ember.ObjectController.extend({content: context});
+    controller = Ember.ObjectController.extend({
+      content: context
+    });
   } else {
     controller = Ember.Controller.extend();
   }
@@ -22063,6 +22183,11 @@ Ember.generateController = function(container, controllerName, context) {
 
 
 (function() {
+/**
+@module ember
+@submodule ember-routing
+*/
+
 var Router = requireModule("router");
 var get = Ember.get, set = Ember.set, classify = Ember.String.classify;
 
@@ -22111,6 +22236,9 @@ Ember.Router = Ember.Object.extend({
   },
 
   didTransition: function(infos) {
+    // Don't do any further action here if we redirected
+    if (infos[infos.length-1].handler.transitioned) { return; }
+
     var appController = this.container.lookup('controller:application'),
         path = routePath(infos);
 
@@ -22218,7 +22346,7 @@ function getHandlerFunction(router) {
       handler = container.lookup('route:' + name);
     }
 
-    handler.templateName = name;
+    handler.routeName = name;
     return handler;
   };
 }
@@ -22299,6 +22427,11 @@ Ember.Router.reopenClass({
 
 
 (function() {
+/**
+@module ember
+@submodule ember-routing
+*/
+
 var get = Ember.get, set = Ember.set,
     classify = Ember.String.classify,
     decamelize = Ember.String.decamelize;
@@ -22348,13 +22481,16 @@ Ember.Route = Ember.Object.extend({
     @method setup
   */
   setup: function(context) {
-    this.currentModel = context;
     this.transitioned = false;
     this.redirect(context);
 
     if (this.transitioned) { return; }
 
-    var controller = this.controllerFor(this.templateName, context);
+    var controller = this.controllerFor(this.routeName, context);
+
+    if (controller) {
+      set(controller, 'model', context);
+    }
 
     if (this.setupControllers) {
       Ember.deprecate("Ember.Route.setupControllers is deprecated. Please use Ember.Route.setupController(controller, model) instead.");
@@ -22393,6 +22529,15 @@ Ember.Route = Ember.Object.extend({
   deserialize: function(params) {
     var model = this.model(params);
     return this.currentModel = model;
+  },
+
+  /**
+    @private
+
+    Called when the context is changed by router.js.
+  */
+  contextDidChange: function() {
+    this.currentModel = this.context;
   },
 
   /**
@@ -22509,11 +22654,7 @@ Ember.Route = Ember.Object.extend({
 
     @method setupController
   */
-  setupController: function(controller, model) {
-    if (controller) {
-      controller.set('content', model);
-    }
-  },
+  setupController: Ember.K,
 
   /**
     Returns the controller for a particular route.
@@ -22541,6 +22682,9 @@ Ember.Route = Ember.Object.extend({
 
     if (!controller) {
       model = model || this.modelFor(name);
+
+      Ember.assert("You are trying to look up a controller that you did not define, and for which Ember does not know the model.\n\nThis is not a controller for a route, so you must explicitly define the controller ("+this.router.namespace.toString() + "." + Ember.String.capitalize(Ember.String.camelize(name))+"Controller) or pass a model as the second parameter to `controllerFor`, so that Ember knows which type of controller to create for you.", model || this.container.lookup('route:' + name));
+
       controller = Ember.generateController(container, name, model);
     }
 
@@ -22558,7 +22702,8 @@ Ember.Route = Ember.Object.extend({
     @return {Object} the model object
   */
   modelFor: function(name) {
-    return this.container.lookup('route:' + name).currentModel;
+    var route = this.container.lookup('route:' + name);
+    return route && route.currentModel;
   },
 
   /**
@@ -22633,10 +22778,10 @@ Ember.Route = Ember.Object.extend({
   render: function(name, options) {
     if (typeof name === 'object' && !options) {
       options = name;
-      name = this.templateName;
+      name = this.routeName;
     }
 
-    name = name ? name.replace(/\//g, '.') : this.templateName;
+    name = name ? name.replace(/\//g, '.') : this.routeName;
 
     var container = this.container,
         view = container.lookup('view:' + name),
@@ -22684,7 +22829,15 @@ function normalizeOptions(route, name, template, options) {
   options.name = name;
   options.template = template;
 
-  var controller = options.controller || route.templateName;
+  var controller = options.controller, namedController;
+
+  if (options.controller) {
+    controller = options.controller;
+  } else if (namedController = route.container.lookup('controller:' + name)) {
+    controller = namedController;
+  } else {
+    controller = route.routeName;
+  }
 
   if (typeof controller === 'string') {
     controller = route.container.lookup('controller:' + controller);
@@ -22851,6 +23004,11 @@ Ember.onLoad('Ember.Handlebars', function(Handlebars) {
 
 
 (function() {
+/**
+@module ember
+@submodule ember-routing
+*/
+
 var get = Ember.get, set = Ember.set;
 Ember.onLoad('Ember.Handlebars', function(Handlebars) {
   /**
@@ -22962,6 +23120,11 @@ Ember.onLoad('Ember.Handlebars', function(Handlebars) {
 
 
 (function() {
+/**
+@module ember
+@submodule ember-routing
+*/
+
 var get = Ember.get, set = Ember.set;
 Ember.onLoad('Ember.Handlebars', function(Handlebars) {
 
@@ -23016,6 +23179,10 @@ Ember.onLoad('Ember.Handlebars', function(Handlebars) {
 
 
 (function() {
+/**
+@module ember
+@submodule ember-routing
+*/
 Ember.onLoad('Ember.Handlebars', function(Handlebars) {
 
   var resolvePaths = Ember.Handlebars.resolvePaths,
@@ -23289,7 +23456,28 @@ Ember.onLoad('Ember.Handlebars', function(Handlebars) {
 
 
 (function() {
+/**
+@module ember
+@submodule ember-routing
+*/
+
 var get = Ember.get, set = Ember.set;
+var ControllersProxy = Ember.Object.extend({
+  controller: null,
+
+  unknownProperty: function(controllerName) {
+    var controller = get(this, 'controller'),
+      needs = get(controller, 'needs'),
+      dependency;
+
+    for (var i=0, l=needs.length; i<l; i++) {
+      dependency = needs[i];
+      if (dependency === controllerName) {
+        return controller.controllerFor(controllerName);
+      }
+    }
+  }
+});
 
 Ember.ControllerMixin.reopen({
   concatenatedProperties: ['needs'],
@@ -23305,20 +23493,25 @@ Ember.ControllerMixin.reopen({
   },
 
   transitionToRoute: function() {
-    var router = get(this, 'target');
+    var target = get(this, 'target');
 
-    return router.transitionTo.apply(router, arguments);
+    return target.transitionTo.apply(target, arguments);
   },
 
+  // TODO: Deprecate this, see https://github.com/emberjs/ember.js/issues/1785
   transitionTo: function() {
-    Ember.deprecate("transitionTo is deprecated. Please use transitionToRoute.");
     return this.transitionToRoute.apply(this, arguments);
   },
 
   replaceRoute: function() {
-    var router = get(this, 'target');
+    var target = get(this, 'target');
 
-    return router.replaceWith.apply(router, arguments);
+    return target.replaceWith.apply(target, arguments);
+  },
+
+  // TODO: Deprecate this, see https://github.com/emberjs/ember.js/issues/1785
+  replaceWith: function() {
+    return this.replaceRoute.apply(this, arguments);
   },
 
   controllerFor: function(controllerName) {
@@ -23332,7 +23525,11 @@ Ember.ControllerMixin.reopen({
     } else {
       return get(this, 'content');
     }
-  }).property('content')
+  }).property('content'),
+
+  controllers: Ember.computed(function() {
+    return ControllersProxy.create({ controller: this });
+  })
 });
 
 function verifyDependencies(controller) {
@@ -23348,7 +23545,7 @@ function verifyDependencies(controller) {
 
     if (!container.has(dependency)) {
       satisfied = false;
-      Ember.assert(this + " needs " + dependency + " but it does not exist", false);
+      Ember.assert(controller + " needs " + dependency + " but it does not exist", false);
     }
   }
 
@@ -23360,6 +23557,11 @@ function verifyDependencies(controller) {
 
 
 (function() {
+/**
+@module ember
+@submodule ember-routing
+*/
+
 var get = Ember.get, set = Ember.set;
 
 Ember.View.reopen({
@@ -23401,7 +23603,7 @@ Ember.View.reopen({
 (function() {
 /**
 @module ember
-@submodule ember-old-router
+@submodule ember-routing
 */
 
 var get = Ember.get, set = Ember.set;
@@ -23458,7 +23660,7 @@ Ember.Location = {
 (function() {
 /**
 @module ember
-@submodule ember-old-router
+@submodule ember-routing
 */
 
 var get = Ember.get, set = Ember.set;
@@ -23505,7 +23707,7 @@ Ember.Location.registerImplementation('none', Ember.NoneLocation);
 (function() {
 /**
 @module ember
-@submodule ember-old-router
+@submodule ember-routing
 */
 
 var get = Ember.get, set = Ember.set;
@@ -23607,7 +23809,7 @@ Ember.Location.registerImplementation('hash', Ember.HashLocation);
 (function() {
 /**
 @module ember
-@submodule ember-old-router
+@submodule ember-routing
 */
 
 var get = Ember.get, set = Ember.set;
@@ -23787,6 +23989,14 @@ Ember.Location.registerImplementation('history', Ember.HistoryLocation);
 
 
 (function() {
+/**
+Ember Routing
+
+@module ember
+@submodule ember-routing
+@requires ember-states
+@requires ember-views
+*/
 
 })();
 
@@ -25825,8 +26035,8 @@ Ember States
 
 
 })();
-// Version: v1.0.0-pre.2-405-g8fd800f
-// Last commit: 8fd800f (2013-01-15 15:33:00 -0800)
+// Version: v1.0.0-pre.4
+// Last commit: 855db1a (2013-01-17 23:06:53 -0800)
 
 
 (function() {
