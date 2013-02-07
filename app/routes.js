@@ -3,3 +3,9 @@ Movies.Router.map(function(){
     this.route("results", { path: "/:keyword" });
   });
 });
+
+Movies.IndexRoute = Ember.Route.extend({
+  redirect: function(){
+    this.transitionTo("search");
+  }
+});
