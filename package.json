@@ -14,5 +14,8 @@
     "grunt-contrib-watch": "~0.1.4",
     "grunt-contrib-sass": "git://github.com/gruntjs/grunt-contrib-sass",
     "grunt-contrib-connect": "git://github.com/gruntjs/grunt-contrib-connect"
+  },
+  "devDependencies": {
+    "buster": "~0.6.12"
   }
 }

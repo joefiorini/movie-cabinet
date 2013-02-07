@@ -8,8 +8,7 @@ require('vendor/jquery.inview');
 
 require('lib/ember-export');
 
-window.Movies = Ember.Application.create();
-Ember._.exports.setup(Movies);
+require('app/main');
 
 require('lib/fixtures');
 require('lib/rotten');
